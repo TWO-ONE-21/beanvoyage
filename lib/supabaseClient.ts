@@ -1,13 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-// --- MODIFIKASI DIMULAI ---
-// Kita tambahkan "||" (OR) string kosong. 
-// Ini trik agar saat Vercel melakukan build, dia tidak error "Required".
-// Saat website jalan beneran, dia akan pakai process.env yang asli.
+// --- CARA BARBAR (HARDCODE) ---
+// Langsung tempel nilainya di sini sebagai teks biasa.
+// Jangan lupa pakai tanda kutip dua ("...")
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co"
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key"
-
-// --- MODIFIKASI SELESAI ---
+const supabaseUrl = "https://vyguofxpodgolidpehox.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5Z3VvZnhwb2Rnb2xpZHBlaG94Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTU2MDEsImV4cCI6MjA4MjA5MTYwMX0.cEtUXtabt0V39ryRJ3mlMdxkcwrYUx-UvOvyqvrol8k"
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
