@@ -1,0 +1,970 @@
+'use client';
+
+// Force dynamic rendering to prevent stale data
+export const dynamic = 'force-dynamic';
+
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
+import LogoutButton from '@/components/LogoutButton';
+import { Check, Settings, X, AlertTriangle, PauseCircle } from 'lucide-react';
+
+// --- TYPES ---
+interface UserData {
+    nama_lengkap: string;
+}
+
+interface Subscription {
+    status_aktif: string;
+    tier_id: string;
+    next_billing_date: string;
+    paket_langganan?: {
+        nama_tier: string;
+    };
+}
+
+interface Coffee {
+    coffee_id: string;
+    nama_origin: string;
+    metadata_rasa_kopi: {
+        level_acidity: number;
+        level_body: number;
+        tasting_notes: string;
+    }[];
+}
+
+interface PerfectMatch extends Coffee {
+    score: number;
+}
+
+interface DeliveryForReview {
+    delivery_id: string;
+    status: string;
+    tanggal_kirim: string;
+}
+
+interface Shipment {
+    delivery_id: string;
+    status: string;
+    tanggal_kirim: string;
+    coffee_id: string;
+    stok_kopi: {
+        nama_origin: string;
+    };
+}
+
+interface CoffeeStock {
+    coffee_id: string;
+    nama_origin: string;
+    metadata_rasa_kopi: {
+        level_acidity: number;
+        level_body: number;
+        tasting_notes: string;
+    }[];
+}
+
+export default function DashboardPage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+
+    // Core Data State
+    const [userData, setUserData] = useState<UserData | null>(null);
+    const [subscription, setSubscription] = useState<Subscription | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    // Shipment & Tracking State
+    const [currentShipmentStatus, setCurrentShipmentStatus] = useState<string | null>(null);
+    const [activeShipment, setActiveShipment] = useState<Shipment | null>(null);
+
+    // Admin Stats State
+    const [adminStats, setAdminStats] = useState({ activeMembers: 0, pendingShipments: 0, completedDeliveries: 0 });
+
+    // Review & Calibration State
+    const [deliveryToReview, setDeliveryToReview] = useState<DeliveryForReview | null>(null);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [reviewText, setReviewText] = useState('');
+    const [submittingReview, setSubmittingReview] = useState(false);
+    const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+    const [showCalibrationPrompt, setShowCalibrationPrompt] = useState(false);
+
+    // Recommendation State (Lead Only)
+    const [perfectMatch, setPerfectMatch] = useState<PerfectMatch | null>(null);
+    const [noProfile, setNoProfile] = useState(false);
+
+    // --- RETENTION STRATEGY STATE ---
+    const [showManageModal, setShowManageModal] = useState(false);
+    const [manageStep, setManageStep] = useState<'MENU' | 'CONFIRM_CANCEL'>('MENU');
+    const [isUpdatingSub, setIsUpdatingSub] = useState(false);
+
+    // --- SEQUENTIAL FETCHING LOGIC ---
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setLoading(true);
+
+                // 1. Check User Session
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                if (authError || !user) {
+                    router.push('/auth/register');
+                    return;
+                }
+
+                // Redirect Admin
+                // Redirect Admin / Admin Gate
+                const adminEmail = 'ardoriandaadmin@beanvoyage.com';
+                if (user.email?.toLowerCase().trim() === adminEmail) {
+                    setIsAdmin(true);
+
+                    // FETCH ADMIN STATS
+                    const { count: activeCount } = await supabase
+                        .from('status_langganan')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status_aktif', 'Active');
+
+                    const { count: pendingCount } = await supabase
+                        .from('log_pengiriman')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'Processing');
+
+                    const { count: deliveredCount } = await supabase
+                        .from('log_pengiriman')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'Delivered');
+
+                    setAdminStats({
+                        activeMembers: activeCount || 0,
+                        pendingShipments: pendingCount || 0,
+                        completedDeliveries: deliveredCount || 0
+                    });
+
+                    setLoading(false);
+                    return; // STOP HERE! Do not fetch user subscription.
+                }
+
+                // 2. Fetch User Profile
+                const { data: profile } = await supabase
+                    .from('User')
+                    .select('nama_lengkap')
+                    .eq('user_id', user.id)
+                    .single();
+                setUserData(profile);
+
+                // 3. Fetch Subscription Status
+                const { data: sub } = await supabase
+                    .from('status_langganan')
+                    .select(`
+                        *,
+                        paket_langganan ( nama_tier )
+                    `)
+                    .eq('user_id', user.id)
+                    .maybeSingle(); // Use maybeSingle for safety
+
+                setSubscription(sub);
+
+                // 4. Fetch Last Shipment (Processing Loop)
+                const { data: lastShipment } = await supabase
+                    .from('log_pengiriman')
+                    .select('*, stok_kopi(nama_origin)')
+                    .eq('user_id', user.id)
+                    .order('tanggal_kirim', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (lastShipment) {
+                    setActiveShipment(lastShipment);
+                    setCurrentShipmentStatus(lastShipment.status);
+
+                    // 5. REVIEW CHECK LOGIC (Crucial Fix)
+                    if (lastShipment.status === 'Delivered') {
+                        // Explicitly check if a review exists for THIS delivery_id
+                        const { data: existingReview } = await supabase
+                            .from('ulasan_feedback')
+                            .select('feedback_id')
+                            .eq('delivery_id', lastShipment.delivery_id)
+                            .maybeSingle();
+
+                        if (!existingReview) {
+                            console.log("No review found for Delivered shipment. Showing Card.");
+                            setDeliveryToReview(lastShipment);
+                        } else {
+                            console.log("Review exists. Hiding Card.");
+                            setDeliveryToReview(null);
+                        }
+                    } else {
+                        // Not delivered yet, no review needed
+                        setDeliveryToReview(null);
+                    }
+                }
+
+                // 6. Lead / Recommendation Logic (If User is NOT Active)
+                // Robust filtering: Check if status contains "Active" (case insensitive)
+                const isActiveUser = sub && sub.status_aktif && sub.status_aktif.toLowerCase() === 'active';
+
+                if (!isActiveUser) {
+                    await fetchRecommendations(user.id);
+                }
+
+            } catch (err) {
+                console.error("Critical Dashboard Error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [router]);
+
+    // Helper: Fetch Recommendations
+    const fetchRecommendations = async (userId: string) => {
+        const { data: pref } = await supabase
+            .from('profil_rasa_user')
+            .select('pref_acidity, pref_body')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (!pref) {
+            setNoProfile(true);
+            return;
+        }
+
+        const { data: coffees } = await supabase
+            .from('stok_kopi')
+            .select(`
+                coffee_id,
+                nama_origin,
+                metadata_rasa_kopi (
+                    level_acidity,
+                    level_body,
+                    tasting_notes
+                )
+            `);
+
+        if (coffees && coffees.length > 0) {
+            let bestMatch: PerfectMatch | null = null;
+            let minDifference = Infinity;
+
+            coffees.forEach((c: CoffeeStock) => {
+                const meta = c.metadata_rasa_kopi?.[0];
+                if (meta) {
+                    const diff =
+                        Math.abs(pref.pref_acidity - meta.level_acidity) +
+                        Math.abs(pref.pref_body - meta.level_body);
+
+                    if (diff < minDifference) {
+                        minDifference = diff;
+                        bestMatch = {
+                            ...c,
+                            metadata_rasa_kopi: [meta],
+                            score: 100 - (diff * 10)
+                        };
+                    }
+                }
+            });
+            setPerfectMatch(bestMatch);
+        }
+    };
+
+    // --- ACTIONS ---
+
+    const handleSubmitReview = async (isPerfectMatch = false) => {
+        if (!deliveryToReview) return;
+        setSubmittingReview(true);
+
+        const rating = isPerfectMatch ? 5 : reviewRating;
+        const notes = isPerfectMatch ? "Auto Perfect Match" : reviewText;
+
+        if (rating === 0) {
+            alert("Mohon berikan rating bintang.");
+            setSubmittingReview(false);
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('ulasan_feedback')
+                .insert({
+                    delivery_id: deliveryToReview.delivery_id,
+                    skor_rating: rating,
+                    review_text: notes
+                });
+
+            if (error) throw error;
+
+            // RATING LOGIC
+            if (rating <= 3) {
+                setShowCalibrationPrompt(true);
+            } else {
+                setIsReviewSubmitted(true);
+                setDeliveryToReview(null); // Hide immediately
+                alert("Terima kasih! Profil rasa Anda telah diperbarui.");
+                router.refresh();
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("Gagal mengirim ulasan.");
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
+    // --- HELPER UI ---
+
+    // Exact Calibration for Stepper
+    const getProgressWidth = (status: string | null) => {
+        if (!status) return '0%';
+        switch (status) {
+            case 'Processing': return '0%';
+            case 'Shipped': return '50%';
+            case 'Delivered': return '100%';
+            default: return '0%';
+        }
+    };
+
+    // --- HELPER: DATE CALCULATION ---
+    const calculateArrivalDate = (sendDate: string | null) => {
+        // Logika: Estimasi = Tanggal Kirim + 3 Hari
+        // Jika null (Processing), gunakan Hari Ini + 3 Hari
+        const baseDate = sendDate ? new Date(sendDate) : new Date();
+        const arrivalDate = new Date(baseDate);
+        arrivalDate.setDate(baseDate.getDate() + 3);
+
+        return arrivalDate.toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+    };
+
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return '';
+        return new Date(dateString).toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+    };
+
+    // --- SUBSCRIPTION MANAGEMENT HANDLERS ---
+    const handleUpdateSubscription = async (newStatus: 'Paused' | 'Cancelled' | 'Active') => {
+        if (!userData || !subscription) return;
+        setIsUpdatingSub(true);
+
+        try {
+            // Update Supabase
+            const { error } = await supabase
+                .from('status_langganan')
+                .update({ status_aktif: newStatus })
+                .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
+
+            if (error) throw error;
+
+            // Update Local State
+            setSubscription(prev => prev ? ({ ...prev, status_aktif: newStatus }) : null);
+
+            // Conditional Alert
+            if (newStatus === 'Active') {
+                alert("Selamat kembali! Keanggotaan Anda telah aktif.");
+            } else {
+                alert(`Langganan berhasil diperbarui menjadi: ${newStatus === 'Paused' ? 'Dijeda' : 'Dibatalkan'}`);
+            }
+
+            setShowManageModal(false);
+            setManageStep('MENU'); // Reset modal step
+            router.refresh();
+
+        } catch (err: any) {
+            console.error('Update Sub Error:', err);
+            alert('Gagal memperbarui status langganan. Silakan coba lagi.');
+        } finally {
+            setIsUpdatingSub(false);
+        }
+    };
+
+    if (loading) return <div className="min-h-screen bg-[#050505] text-[#D4AF37] flex items-center justify-center font-sans tracking-widest text-xs">LOADING DASHBOARD...</div>;
+
+    // --- ADMIN GATE RENDER ---
+    if (isAdmin) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] text-[#D4AF37] p-8 font-serif">
+                {/* Header Logout Component */}
+                <div className="flex justify-between items-center mb-12">
+                    <h1 className="text-3xl">Administrator HQ</h1>
+                    <LogoutButton />
+                </div>
+
+                {/* Admin Card */}
+                <div className="max-w-5xl mx-auto mt-10">
+
+                    {/* KPI GRID */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                        {/* Card 1: Active Members */}
+                        <div className="bg-[#111] border border-[#D4AF37] p-6 rounded-sm text-center">
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Active Subscribers</h3>
+                            <p className="font-serif text-5xl text-[#D4AF37]">{adminStats.activeMembers}</p>
+                            <p className="text-gray-600 text-[10px] mt-2">TOTAL MEMBERSHIP</p>
+                        </div>
+
+                        {/* Card 2: Pending Shipments */}
+                        <div className="bg-[#111] border border-red-900/50 p-6 rounded-sm text-center">
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">To Be Packed</h3>
+                            <p className="font-serif text-5xl text-red-500">{adminStats.pendingShipments}</p>
+                            <p className="text-gray-600 text-[10px] mt-2">PROCESSING QUEUE</p>
+                        </div>
+
+                        {/* Card 3: Completed Journey */}
+                        <div className="bg-[#111] border border-green-900/50 p-6 rounded-sm text-center">
+                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Completed Journey</h3>
+                            <p className="font-serif text-5xl text-green-500">{adminStats.completedDeliveries}</p>
+                            <p className="text-gray-600 text-[10px] mt-2">DELIVERED PACKAGES</p>
+                        </div>
+                    </div>
+
+                    <div className="border border-[#D4AF37] p-10 text-center rounded-sm bg-[#111]">
+                        <h2 className="text-4xl mb-6">Logistics Command Center</h2>
+                        <p className="font-sans text-gray-400 mb-8">
+                            Sistem CRM berjalan normal. Kelola pesanan, input resi, dan status pengiriman member dari sini.
+                        </p>
+                        <Link href="/admin" className="bg-[#D4AF37] text-black font-bold py-4 px-10 rounded hover:bg-[#b5952f] transition">
+                            BUKA PANEL ADMIN
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const isActiveMember = subscription?.status_aktif === 'Active';
+    const isPaused = subscription?.status_aktif === 'Paused';
+    const isCancelled = subscription?.status_aktif === 'Cancelled';
+
+    return (
+        <div className="min-h-screen bg-[#050505] text-gray-200 p-6 md:p-12 font-sans selection:bg-[#D4AF37] selection:text-black">
+
+            {/* TOP BAR */}
+            <div className="flex justify-between items-center mb-12 border-b border-gray-900 pb-6">
+                <div>
+                    <h1 className="font-serif text-3xl md:text-4xl text-white mb-1">
+                        Selamat Datang, <span className="text-[#D4AF37] italic">{userData?.nama_lengkap}</span>
+                    </h1>
+                    <p className="text-gray-500 text-xs tracking-widest uppercase">
+                        MEMBERSHIP: {subscription?.paket_langganan?.nama_tier || subscription?.tier_id || 'GUEST'}
+                    </p>
+                </div>
+                <div className="flex items-center gap-4">
+                    {/* MANAGE SUBSCRIPTION BUTTON (Only for non-admin, and existing sub) */}
+                    {!isAdmin && subscription && (
+                        <button
+                            onClick={() => {
+                                setManageStep('MENU');
+                                setShowManageModal(true);
+                            }}
+                            className="flex items-center gap-2 text-xs text-gray-400 hover:text-[#D4AF37] uppercase tracking-widest transition-colors mr-2"
+                        >
+                            <Settings size={14} /> Atur Langganan
+                        </button>
+                    )}
+                    {isAdmin && <span className="text-red-500 text-xs font-bold border border-red-500 px-2 py-1 rounded">ADMIN ACCESS</span>}
+                    <LogoutButton />
+                </div>
+            </div>
+
+            <div className="max-w-5xl mx-auto space-y-16">
+
+                {/* --- SECTION 1: ACTIVE MEMBER DASHBOARD --- */}
+                {isActiveMember ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+
+                        {/* LEFT: Current Shipment */}
+                        <div className="space-y-8">
+                            <div>
+                                <h2 className="font-serif text-2xl text-white mb-6 flex items-center gap-3">
+                                    <span className="w-8 h-[1px] bg-[#D4AF37]"></span>
+                                    Current Shipment
+                                </h2>
+
+                                <div className="bg-[#111] p-8 border border-gray-800 rounded-sm relative overflow-hidden group hover:border-[#D4AF37]/30 transition-colors duration-500">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                                        <svg width="100" height="100" viewBox="0 0 24 24" fill="white"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" /></svg>
+                                    </div>
+
+                                    <div className="mb-8 flex justify-between items-end">
+                                        <div>
+                                            {activeShipment?.status !== 'Delivered' ? (
+                                                <>
+                                                    <p className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-2">ESTIMASI TIBA</p>
+                                                    <p className="font-serif text-2xl text-white">
+                                                        {calculateArrivalDate(activeShipment?.tanggal_kirim || null)}
+                                                    </p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <p className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-2">STATUS PENGIRIMAN</p>
+                                                    <p className="font-serif text-2xl text-[#D4AF37] animate-pulse">Siap Diseduh</p>
+                                                </>
+                                            )}
+                                        </div>
+                                        {/* Coffee Info & Story Link */}
+                                        {activeShipment && activeShipment.stok_kopi && (
+                                            <div className="text-right relative z-10">
+                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">In Your Cup</p>
+                                                <p className="font-serif text-lg text-white mb-3">{activeShipment.stok_kopi.nama_origin}</p>
+                                                <Link
+                                                    href={`/story/${activeShipment.coffee_id}`}
+                                                    className="inline-block border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-widest transition-all"
+                                                >
+                                                    Read Story
+                                                </Link>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <p className="text-xs font-bold text-gray-500 tracking-widest uppercase mb-4">PROCESSING STATUS</p>
+
+                                        {/* STEPPER UI (LUXURY REDESIGN) */}
+                                        <div className="relative pt-8 pb-6">
+                                            {/* Background Track */}
+                                            <div className="absolute top-8 left-0 w-full h-[2px] bg-gray-800 z-0"></div>
+
+                                            {/* Gold Progress Line */}
+                                            <div
+                                                className="absolute top-8 left-0 h-[2px] bg-[#D4AF37] transition-all duration-700 ease-in-out z-0"
+                                                style={{ width: getProgressWidth(currentShipmentStatus) }}
+                                            ></div>
+
+                                            {/* Node 1: Packed (0%) */}
+                                            <div className="absolute top-8 left-0 transform -translate-y-1/2 z-10">
+                                                <div className={`w-4 h-4 rounded-full border-2 transition-all duration-500 ${currentShipmentStatus === 'Processing' || currentShipmentStatus === 'Shipped' || currentShipmentStatus === 'Delivered'
+                                                    ? 'bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.6)]'
+                                                    : 'bg-gray-900 border-gray-700'
+                                                    }`}></div>
+                                                <span className={`absolute top-6 left-1/2 transform -translate-x-1/2 text-[9px] uppercase tracking-wider whitespace-nowrap font-bold transition-colors duration-300 ${currentShipmentStatus === 'Processing' || currentShipmentStatus === 'Shipped' || currentShipmentStatus === 'Delivered'
+                                                    ? 'text-[#D4AF37]'
+                                                    : 'text-gray-600'
+                                                    }`}>Packed</span>
+                                            </div>
+
+                                            {/* Node 2: Shipped (50%) */}
+                                            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                                                <div className={`w-4 h-4 rounded-full border-2 transition-all duration-500 ${currentShipmentStatus === 'Shipped' || currentShipmentStatus === 'Delivered'
+                                                    ? 'bg-[#D4AF37] border-[#D4AF37] shadow-[0_0_8px_rgba(212,175,55,0.6)]'
+                                                    : 'bg-gray-900 border-gray-700'
+                                                    }`}></div>
+                                                <span className={`absolute top-6 left-1/2 transform -translate-x-1/2 text-[9px] uppercase tracking-wider whitespace-nowrap font-bold transition-colors duration-300 ${currentShipmentStatus === 'Shipped' || currentShipmentStatus === 'Delivered'
+                                                    ? 'text-[#D4AF37]'
+                                                    : 'text-gray-600'
+                                                    }`}>Shipped</span>
+                                            </div>
+
+                                            {/* Node 3: Delivered (100%) */}
+                                            <div className="absolute top-8 right-0 transform -translate-y-1/2 z-10">
+                                                {currentShipmentStatus === 'Delivered' ? (
+                                                    <div className="w-4 h-4 rounded-full bg-[#D4AF37] border-2 border-[#D4AF37] flex items-center justify-center shadow-[0_0_12px_rgba(212,175,55,0.8)] transition-all duration-500">
+                                                        <Check className="w-2.5 h-2.5 text-black stroke-[3]" />
+                                                    </div>
+                                                ) : (
+                                                    <div className={`w-4 h-4 rounded-full border-2 transition-all duration-500 ${currentShipmentStatus === 'Delivered'
+                                                        ? 'bg-[#D4AF37] border-[#D4AF37]'
+                                                        : 'bg-gray-900 border-gray-700'
+                                                        }`}></div>
+                                                )}
+                                                <span className={`absolute top-6 left-1/2 transform -translate-x-1/2 text-[9px] uppercase tracking-wider whitespace-nowrap font-bold transition-colors duration-300 ${currentShipmentStatus === 'Delivered'
+                                                    ? 'text-[#D4AF37]'
+                                                    : 'text-gray-600'
+                                                    }`}>Delivered</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RIGHT: Tasting Journal or Banner */}
+                        <div className="space-y-8">
+                            <h2 className="font-serif text-2xl text-white mb-6 flex items-center gap-3">
+                                <span className="w-8 h-[1px] bg-[#D4AF37]"></span>
+                                Tasting Journal
+                            </h2>
+
+                            {/* CONDITIONAL RENDER: REVIEW CARD */}
+                            {deliveryToReview && !isReviewSubmitted ? (
+                                <div className="bg-[#1a1a1a] border border-[#D4AF37] p-8 rounded-sm shadow-2xl relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-50"></div>
+
+                                    <h3 className="font-serif text-xl text-white mb-2">Penilaian Kopi Bulan Ini</h3>
+                                    <p className="text-gray-400 text-xs mb-6 font-sans">
+                                        Pengiriman: <span className="text-[#D4AF37]">{formatDate(deliveryToReview.tanggal_kirim)}</span>
+                                    </p>
+
+                                    {/* Star Rating */}
+                                    <div className="flex gap-2 mb-6 justify-center">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                onClick={() => setReviewRating(star)}
+                                                className={`text-2xl transition-all hover:scale-110 ${star <= reviewRating ? 'text-[#D4AF37]' : 'text-gray-700'
+                                                    }`}
+                                            >
+                                                ★
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Text Area */}
+                                    <textarea
+                                        className="w-full bg-black/50 border border-gray-800 rounded p-4 text-sm text-gray-300 mb-6 focus:border-[#D4AF37] focus:outline-none transition-colors h-24 resize-none placeholder-gray-600"
+                                        placeholder="Ceritakan pengalaman rasa Anda (cth: Terlalu asam, body kurang tebal...)"
+                                        value={reviewText}
+                                        onChange={(e) => setReviewText(e.target.value)}
+                                    />
+
+                                    {/* Actions */}
+                                    <div className="flex flex-col gap-3">
+                                        <button
+                                            onClick={() => handleSubmitReview(false)}
+                                            disabled={submittingReview}
+                                            className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold py-3 uppercase tracking-widest text-xs transition-all disabled:opacity-50"
+                                        >
+                                            {submittingReview ? 'Mengirim...' : 'Kirim Ulasan'}
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleSubmitReview(true)}
+                                            disabled={submittingReview}
+                                            className="w-full bg-transparent border border-gray-700 hover:border-[#D4AF37] text-gray-400 hover:text-[#D4AF37] font-bold py-3 uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 group"
+                                        >
+                                            <span className="group-hover:text-white transition-colors">Perfect Match! (5★)</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                // IF NO REVIEW NEEDED
+                                <div className="bg-[#111] p-8 border border-gray-800 rounded-sm flex flex-col items-center justify-center text-center h-full min-h-[300px] opacity-50 hover:opacity-100 transition-opacity">
+                                    <p className="font-serif text-gray-500 italic mb-2">&quot;Coffee is a language in itself.&quot;</p>
+                                    <p className="text-xs text-gray-600 uppercase tracking-widest">- Jackie Chan</p>
+                                    <div className="mt-8 border border-gray-800 px-6 py-2 rounded-full">
+                                        <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-widest">All Journals Up To Date</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                    </div>
+                ) : (
+                    // --- SECTION 2: LEAD / GUEST DASHBOARD CONTENT ---
+                    <>
+                        <h1 className="font-serif text-3xl mb-8">Your Soul Coffee</h1>
+
+                        {noProfile ? (
+                            <div className="border border-dashed border-[#D4AF37]/50 p-12 text-center rounded">
+                                <p className="text-gray-400 mb-6 font-sans">
+                                    Anda belum memiliki profil rasa. Ikuti kuis untuk mendapatkan rekomendasi.
+                                </p>
+                                <button
+                                    onClick={() => router.push('/quiz')}
+                                    className="bg-[#D4AF37] text-black px-8 py-3 rounded font-bold uppercase tracking-widest hover:bg-[#b5952f] transition"
+                                >
+                                    Ikuti Kuis Preferensi
+                                </button>
+                            </div>
+                        ) : perfectMatch ? (
+                            <div className="bg-[#1a1a1a] border border-[#D4AF37] rounded-sm overflow-hidden flex flex-col md:flex-row shadow-2xl shadow-[#D4AF37]/5">
+                                <div className="p-8 md:p-12 md:w-2/3 flex flex-col justify-center">
+                                    <span className="text-[#D4AF37] font-sans text-xs font-bold tracking-[0.2em] mb-4 uppercase">
+                                        Best Match For You
+                                    </span>
+                                    <h2 className="font-serif text-4xl md:text-5xl text-white mb-2 leading-tight">
+                                        {perfectMatch.nama_origin}
+                                    </h2>
+                                    <div className="flex gap-2 mb-6">
+                                        {perfectMatch.metadata_rasa_kopi[0].tasting_notes.split(',').map((note: string, idx: number) => (
+                                            <span key={idx} className="bg-[#000] text-gray-300 text-[10px] px-2 py-1 rounded border border-[#333] uppercase tracking-wide">
+                                                {note.trim()}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <p className="text-gray-400 text-sm font-sans leading-relaxed mb-8 max-w-md">
+                                        Kopi ini memiliki tingkat acidity dan body yang selaras dengan preferensi Anda.
+                                    </p>
+                                    <div className="flex gap-4 w-full">
+                                        <button
+                                            onClick={() => {
+                                                const pricingSection = document.getElementById('pricing-section');
+                                                if (pricingSection) {
+                                                    pricingSection.scrollIntoView({ behavior: 'smooth' });
+                                                }
+                                            }}
+                                            className="flex-1 bg-[#D4AF37] hover:bg-[#b5952f] text-black px-4 py-4 rounded font-bold uppercase tracking-widest text-xs transition-all"
+                                        >
+                                            Mulai Berlangganan
+                                        </button>
+                                        <Link
+                                            href={`/story/${perfectMatch.coffee_id}`}
+                                            className="flex-1 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black px-4 py-4 rounded font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2"
+                                        >
+                                            Read Story
+                                        </Link>
+                                    </div>
+                                </div>
+                                <div className="bg-[#D4AF37] p-8 md:w-1/3 flex flex-col items-center justify-center text-black relative overflow-hidden">
+                                    <div className="relative z-10 text-center">
+                                        <span className="block font-sans font-bold text-sm tracking-widest mb-2 opacity-80">MATCH SCORE</span>
+                                        <span className="font-serif text-6xl md:text-7xl font-black">
+                                            {perfectMatch.score}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center text-gray-500 py-10">
+                                Tidak ada data kopi yang cocok saat ini.
+                            </div>
+                        )}
+                    </>
+                )}
+                {/* --- SECTION 1B: PAUSED/CANCELLED STATE --- */}
+                {(isPaused || isCancelled) && (
+                    <div className="max-w-2xl mx-auto text-center py-20 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                        {isPaused ? (
+                            <div className="bg-yellow-900/10 border border-yellow-600/30 p-10 rounded-sm">
+                                <PauseCircle size={48} className="mx-auto text-yellow-500 mb-6" />
+                                <h2 className="font-serif text-3xl text-yellow-500 mb-4">Membership Dijeda</h2>
+                                <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                                    Anda tidak akan menerima tagihan atau pengiriman untuk saat ini. Kopi Anda aman menunggu Anda kembali.
+                                </p>
+                                <button
+                                    onClick={() => handleUpdateSubscription('Active')} // Reactivate Flow
+                                    className="bg-yellow-600 text-black px-8 py-3 rounded font-bold uppercase tracking-widest hover:bg-yellow-500 transition-colors"
+                                >
+                                    Aktifkan Kembali
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="bg-red-900/10 border border-red-600/30 p-10 rounded-sm">
+                                <AlertTriangle size={48} className="mx-auto text-red-500 mb-6" />
+                                <h2 className="font-serif text-3xl text-red-500 mb-4">Membership Non-Aktif</h2>
+                                <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                                    Terima kasih telah menjadi bagian dari perjalanan kami. Pintu kami selalu terbuka jika Anda ingin menyesap kembali kekayaan kopi Nusantara.
+                                </p>
+                                <button
+                                    onClick={() => router.push('/#pricing-section')}
+                                    className="bg-red-600 text-white px-8 py-3 rounded font-bold uppercase tracking-widest hover:bg-red-500 transition-colors"
+                                >
+                                    Daftar Lagi
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* --- NEW: CHOOSE YOUR VOYAGE (SUBSCRIPTION TIERS) --- */}
+            {!isActiveMember && subscription?.status_aktif !== 'Paused' && (
+                <div id="pricing-section" className="max-w-6xl mx-auto mt-32 mb-16 px-6">
+                    <div className="text-center mb-16">
+                        <span className="text-[#D4AF37] text-xs font-bold tracking-[0.3em] uppercase">Membership Plans</span>
+                        <h2 className="font-serif text-4xl mt-3 text-white">Choose Your Voyage</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+
+                        {/* TIER 1: The Weekend Voyager */}
+                        <div className="bg-[#111] border border-gray-800 p-8 rounded-sm hover:border-gray-600 transition-colors duration-300 relative group">
+                            <h3 className="font-serif text-2xl text-white mb-2">The Weekend Voyager</h3>
+                            <p className="text-gray-500 text-xs tracking-widest uppercase mb-6">STARTER PACK</p>
+                            <div className="text-[#D4AF37] font-serif text-3xl mb-6">
+                                Rp 189.000<span className="text-sm text-gray-500 font-sans">/mo</span>
+                            </div>
+                            <ul className="text-sm text-gray-400 space-y-4 mb-8 font-sans">
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> 2x 200g Curated Beans</li>
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> Digital Brewing Guide</li>
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> Free Shipping (Java)</li>
+                            </ul>
+                            <Link
+                                href="/checkout?tier=TIER-1"
+                                className="block w-full text-center border border-gray-600 text-gray-300 py-4 uppercase tracking-widest text-xs font-bold hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all"
+                            >
+                                Start Voyage
+                            </Link>
+                        </div>
+
+                        {/* TIER 2: The Daily Ritual (GOLD / FOCUS) */}
+                        <div className="bg-[#111] border-2 border-[#D4AF37] p-10 rounded-sm relative transform md:-translate-y-4 shadow-[0_0_40px_rgba(212,175,55,0.1)]">
+                            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <span className="bg-[#D4AF37] text-black text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest">
+                                    Most Popular
+                                </span>
+                            </div>
+                            <h3 className="font-serif text-3xl text-white mb-2">The Daily Ritual</h3>
+                            <p className="text-[#D4AF37] text-xs tracking-widest uppercase mb-6">FOR THE ENTHUSIAST</p>
+                            <div className="text-white font-serif text-4xl mb-8">
+                                Rp 289.000<span className="text-sm text-gray-500 font-sans">/mo</span>
+                            </div>
+                            <ul className="text-sm text-gray-300 space-y-4 mb-10 font-sans">
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> 4x 200g Premium Beans</li>
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> Monthly Printed Guide</li>
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> Free Shipping (National)</li>
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> Priority Support 24/7</li>
+                            </ul>
+                            <Link
+                                href="/checkout?tier=TIER-2"
+                                className="block w-full text-center bg-[#D4AF37] text-black py-5 uppercase tracking-widest text-sm font-bold hover:bg-[#b5952f] transition-all shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)]"
+                            >
+                                Choose Ritual
+                            </Link>
+                        </div>
+
+                        {/* TIER 3: The Curator's Circle (SULTAN) */}
+                        <div className="bg-[#111] border border-[#D4AF37]/40 p-8 rounded-sm hover:border-[#D4AF37] transition-colors duration-300 relative">
+                            <h3 className="font-serif text-2xl text-white mb-2">The Curator&apos;s Circle</h3>
+                            <p className="text-gray-500 text-xs tracking-widest uppercase mb-6">LIMITED ACCESS</p>
+                            <div className="text-[#D4AF37] font-serif text-3xl mb-6">
+                                Rp 450.000<span className="text-sm text-gray-500 font-sans">/mo</span>
+                            </div>
+
+                            {/* SPECIAL FEATURE BOX */}
+                            <div className="border border-dashed border-[#D4AF37]/50 bg-[#D4AF37]/5 p-4 mb-6 rounded text-center">
+                                <p className="text-[#D4AF37] text-[10px] uppercase font-bold tracking-wider mb-1">✨ EXCLUSIVE GIFT</p>
+                                <p className="text-gray-300 text-xs font-serif italic">Includes &quot;Kawa Daun&quot; Heritage Pack</p>
+                            </div>
+
+                            <ul className="text-sm text-gray-400 space-y-4 mb-8 font-sans">
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> Weekly Micro-lot Selection</li>
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> Direct Access to Main Roaster</li>
+                                <li className="flex items-center gap-3"><span className="text-[#D4AF37]">✓</span> All Previous Benefits</li>
+                            </ul>
+                            <Link
+                                href="/checkout?tier=TIER-3"
+                                className="block w-full text-center border border-[#D4AF37] text-[#D4AF37] py-4 uppercase tracking-widest text-xs font-bold hover:bg-[#D4AF37] hover:text-black transition-all"
+                            >
+                                Join The Circle
+                            </Link>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            {/* CALIBRATION MODAL */}
+            {showCalibrationPrompt && (
+                <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-6 animate-fade-in">
+                    <div className="bg-[#1a1a1a] border border-[#D4AF37] p-8 max-w-md w-full text-center relative rounded-sm shadow-[0_0_30px_rgba(212,175,55,0.2)]">
+                        <div className="mb-6">
+                            <h3 className="font-serif text-2xl text-[#D4AF37] mb-2">Mari Kalibrasi Ulang</h3>
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                                Maaf rasa kopi ini kurang cocok. Mari kalibrasi ulang lidah Anda agar pengiriman bulan depan lebih pas.
+                            </p>
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => router.push('/quiz')}
+                                className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold py-3 uppercase tracking-widest text-xs transition-all"
+                            >
+                                Ambil Ulang Kuis (Kalibrasi)
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowCalibrationPrompt(false);
+                                    setIsReviewSubmitted(true); // Close card
+                                    setDeliveryToReview(null);
+                                    router.refresh();
+                                }}
+                                className="w-full bg-transparent border border-gray-700 text-gray-500 hover:text-white hover:border-white font-bold py-3 uppercase tracking-widest text-xs transition-all"
+                            >
+                                Nanti Saja
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MANAGE SUBSCRIPTION MODAL */}
+            {showManageModal && (
+                <div className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-[#1a1a1a] border border-gray-800 p-8 max-w-md w-full relative rounded-sm shadow-2xl">
+                        <button
+                            onClick={() => setShowManageModal(false)}
+                            className="absolute top-4 right-4 text-gray-500 hover:text-white"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        {manageStep === 'MENU' ? (
+                            <>
+                                <h3 className="font-serif text-2xl text-white mb-2">Atur Langganan</h3>
+                                <p className="text-gray-400 text-sm mb-8">
+                                    Paket Aktif: <span className="text-[#D4AF37]">{subscription?.paket_langganan?.nama_tier || 'Standard'}</span>
+                                </p>
+
+                                <div className="space-y-4">
+                                    {!isPaused && (
+                                        <button
+                                            onClick={() => handleUpdateSubscription('Paused')}
+                                            disabled={isUpdatingSub}
+                                            className="w-full flex items-center justify-center gap-3 bg-[#111] border border-gray-700 hover:border-yellow-500 text-gray-300 hover:text-yellow-500 py-4 rounded transition-all group"
+                                        >
+                                            <PauseCircle className="transition-colors group-hover:text-yellow-500" />
+                                            <div className="text-left">
+                                                <span className="block text-sm font-bold uppercase tracking-wider">Jeda Langganan (Pause)</span>
+                                                <span className="block text-[10px] text-gray-500">Lewati pengiriman bulan depan tanpa biaya.</span>
+                                            </div>
+                                        </button>
+                                    )}
+
+                                    {!isCancelled && (
+                                        <button
+                                            onClick={() => setManageStep('CONFIRM_CANCEL')}
+                                            disabled={isUpdatingSub}
+                                            className="w-full flex items-center justify-center gap-3 bg-[#111] border border-gray-700 hover:border-red-500 text-gray-300 hover:text-red-500 py-4 rounded transition-all group"
+                                        >
+                                            <X className="transition-colors group-hover:text-red-500" />
+                                            <div className="text-left">
+                                                <span className="block text-sm font-bold uppercase tracking-wider">Batalkan Langganan</span>
+                                                <span className="block text-[10px] text-gray-500">Berhenti berlangganan sepenuhnya.</span>
+                                            </div>
+                                        </button>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            // STEP: CONFIRM CANCEL (THE SAVE FLOW)
+                            <div className="text-center animate-in slide-in-from-right duration-300">
+                                <div className="w-16 h-16 bg-yellow-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <PauseCircle size={32} className="text-[#D4AF37]" />
+                                </div>
+                                <h3 className="font-serif text-2xl text-white mb-4">Tunggu Sebentar...</h3>
+                                <p className="text-gray-300 text-sm leading-relaxed mb-8">
+                                    Sayang sekali jika Anda pergi. Apakah kopinya menumpuk? <br />
+                                    Anda bisa <span className="text-[#D4AF37] font-bold">Menjeda (Pause)</span> pengiriman bulan depan tanpa biaya, dan kembali kapan saja.
+                                </p>
+
+                                <div className="space-y-3">
+                                    <button
+                                        onClick={() => handleUpdateSubscription('Paused')}
+                                        disabled={isUpdatingSub}
+                                        className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black font-bold py-3 uppercase tracking-widest text-xs transition-all"
+                                    >
+                                        Ya, Jeda Saja (Recommended)
+                                    </button>
+                                    <button
+                                        onClick={() => handleUpdateSubscription('Cancelled')}
+                                        disabled={isUpdatingSub}
+                                        className="w-full bg-transparent border border-red-900/50 text-red-500 hover:bg-red-900/20 font-bold py-3 uppercase tracking-widest text-xs transition-all"
+                                    >
+                                        {isUpdatingSub ? 'Memproses...' : 'Tetap Batalkan'}
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => setManageStep('MENU')}
+                                    className="mt-6 text-gray-500 text-xs hover:text-white underline cursor-pointer"
+                                >
+                                    Kembali
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
+}

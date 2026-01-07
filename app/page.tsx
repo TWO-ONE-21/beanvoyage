@@ -1,65 +1,61 @@
-import Image from "next/image";
+import Link from 'next/link';
+import React from 'react';
+import SpotlightBackground from '@/components/SpotlightBackground';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center relative overflow-hidden selection:bg-[#D4AF37] selection:text-black">
+
+      {/* Dynamic Background */}
+      <SpotlightBackground />
+
+      {/* Hero Content */}
+      <div className="relative z-20 max-w-4xl px-6 text-center">
+
+        {/* Brand/Logo Placeholder (Text for now) */}
+        <div className="mb-8 animate-fade-in">
+          <span className="font-serif text-gold-metallic text-2xl tracking-[0.2em] font-bold drop-shadow-md">
+            BEANVOYAGE
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl leading-tight mb-8 text-white drop-shadow-2xl">
+          Orchestrating the <br />
+          <span className="text-gold-metallic italic">
+            Archipelago&apos;s Symphony
+          </span>
+        </h1>
+
+        <p className="font-sans text-gray-400 text-sm md:text-lg max-w-2xl mx-auto leading-relaxed tracking-wide mb-12">
+          Menyingkap melodi tersembunyi dari kopi terbaik Nusantara. Setiap biji membawa kisah tentang tanah vulkanik, kearifan tradisi, dan dedikasi tangan petani yang merawatnya sepenuh hati.
+        </p>
+
+        <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+          <Link
+            href="/quiz"
+            className="w-full md:w-auto px-10 py-4 bg-gold-metallic text-black font-bold text-xs md:text-sm uppercase tracking-[0.15em] transition-all transform hover:translate-y-[-2px] rounded-sm shadow-[0_4px_14px_0_rgba(212,175,55,0.39)]"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            MULAI EKSPLORASI
+          </Link>
+
+          <Link
+            href="/auth/login"
+            className="w-full md:w-auto px-10 py-4 border border-[#D4AF37]/50 hover:border-[#D4AF37] text-[#D4AF37] font-bold text-xs md:text-sm uppercase tracking-[0.15em] transition-all hover:bg-[#D4AF37]/5 rounded-sm"
           >
-            Documentation
-          </a>
+            Member Login
+          </Link>
         </div>
-      </main>
-    </div>
+
+      </div>
+
+      {/* Footer / Copyright */}
+      {/* Ganti 'absolute' jadi 'relative' + 'mt-16' agar dia punya jarak aman dari tombol */}
+      <div className="relative mt-9 mb-6 text-center w-full z-20 opacity-60">
+        <p className="text-[#D4AF37] text-[10px] uppercase tracking-[0.3em] font-sans">
+          &copy; {new Date().getFullYear()} BEANVOYAGE. KURASI KOPI TERBAIK INDONESIA.
+        </p>
+      </div>
+
+    </main>
   );
 }

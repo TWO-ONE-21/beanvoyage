@@ -1,26 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Luxury Theme Colors */
+  --background: #0a0a0a;
+  /* Deep Charcoal/Black */
+  --foreground: #D4AF37;
+  /* Metallic Gold */
+  --surface: #1a1a1a;
+  /* Dark Grey for Cards */
+  --primary: #0a0a0a;
+  --accent: #D4AF37;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+@layer utilities {
+  .text-gold-metallic {
+    @apply bg-gradient-to-br from-[#F5D76E] via-[#D4AF37] to-[#AA8C2C] bg-clip-text text-transparent;
+  }
+
+  .bg-gold-metallic {
+    @apply bg-gradient-to-br from-[#F5D76E] via-[#D4AF37] to-[#AA8C2C] shadow-lg shadow-yellow-900/20;
+  }
+
+  /* Force all Headings to use Serif */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif;
+  }
 }

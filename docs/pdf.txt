@@ -1,0 +1,318 @@
+BAB I: PENDAHULUAN
+1.1 Latar Belakang Masalah
+1.2 Rumusan Masalah
+1.3 Tujuan Project
+1.4 Manfaat Project
+BAB II: PROFIL BISNIS DAN ANALISIS
+2.1 Profil Usaha & Filosofi Brand
+2.2 Business Model Canvas (BMC)
+2.3 Deskripsi Produk & Layanan
+2.4 Segmentasi & Target Pasar
+2.5 Analisis SWOT
+BAB III: PERANCANGAN SISTEM CRM
+3.1 Strategi CRM BeanVoyage
+3.2 Perancangan Alur Sistem (Flowchart)
+3.3 Perancangan Basis Data (ERD)
+BAB IV: IMPLEMENTASI DAN PENGUJIAN
+4.1 Lingkungan Pengembangan
+4.2 Antarmuka dan Fitur Utama
+4.3 Pengujian Sistem
+BAB V: PENUTUP
+5.1 Kesimpulan
+5.2 Saran
+
+BAB 1 PENDAHULUAN
+1.1 Latar Belakang Masalah
+Industri kopi di Indonesia saat ini tengah mengalami transformasi signifikan yang ditandai dengan meluasnya fenomena Third Wave Coffee, sebuah pergerakan yang menempatkan kopi sebagai produk artisanal setara dengan wine, bukan sekadar komoditas massal. Pertumbuhan gerai kopi yang eksponensial di berbagai kota besar menjadi indikator nyata dari tren ini, namun di sisi lain, kondisi tersebut telah menggiring pasar ke dalam situasi Red Ocean di mana persaingan antara pebisnis menjadi sangat ketat dan saturasi pasar mulai terasa. Di tengah kompetisi yang sengit ini, terjadi pergeseran fundamental dalam perilaku konsumen; literatur pemasaran kontemporer mencatat bahwa pelanggan modern tidak lagi sekadar mencari kepuasan fungsional dari sebuah produk kopi, melainkan secara aktif mencari nilai tambah berupa pengalaman (experience) yang imersif dan otentik dalam setiap interaksi konsumsi mereka.
+Kendati demikian, tantangan krusial yang dihadapi oleh Usaha Mikro, Kecil, dan Menengah (UMKM) di sektor ini adalah ketidakseimbangan fokus strategis antara akuisisi dan retensi pelanggan. Mayoritas pelaku usaha cenderung memprioritaskan upaya agresif untuk menjaring konsumen baru (User Acquisition) demi memenangkan persaingan jangka pendek, namun seringkali mengabaikan pentingnya pengelolaan hubungan jangka panjang dengan pelanggan yang sudah ada (Customer Retention). Kelalaian ini berdampak langsung pada inefisiensi operasional, di mana biaya pemasaran mengalami pembengkakan yang signifikan sementara stabilitas volume penjualan tetap fluktuatif akibat ketiadaan basis pelanggan loyal. Dalam lanskap bisnis modern yang dinamis, pendekatan transaksional konvensional yang bersifat 'jual-putus' dinilai tidak lagi relevan untuk mempertahankan keberlanjutan usaha tanpa adanya integrasi strategi Customer Relationship Management (CRM) yang sistematis.
+Ditinjau dari perspektif konsumen, terdapat friksi psikologis dan operasional yang signifikan yang menghambat terciptanya rutinitas konsumsi kopi spesial yang berkelanjutan. Kompleksitas varian produk yang ditawarkan di pasar, mulai dari keberagaman daerah asal biji (single origin) hingga profil penyangraian yang spesifik, seringkali memicu fenomena kelumpuhan dalam memilih (choice paralysis), di mana konsumen merasa terbebani secara kognitif akibat asimetri informasi saat harus mengambil keputusan pembelian. Permasalahan ini diperburuk oleh faktor ketidaknyamanan (inconvenience) dalam manajemen persediaan rumah tangga, di mana konsumen kerap lupa untuk melakukan pembelian ulang (repurchase) tepat waktu; situasi kehabisan stok (stockout) ini pada akhirnya memaksa mereka untuk beralih sementara ke produk substitusi yang lebih mudah diakses namun memiliki kualitas inferior, seperti kopi instan, demi memenuhi kebutuhan konsumsi harian secara mendesak. Selain masalah logistik, konsumen juga mengalami keterputusan emosional (emotional disconnect) dengan asal-usul produk yang mereka konsumsi. Kopi sering kali hadir tanpa narasi, menghilangkan nilai apresiasi terhadap kekayaan agrikultur nusantara yang sesungguhnya.
+Berdasarkan analisis terhadap friksi pada sisi konsumen dan inefisiensi pada sisi pelaku usaha tersebut, teridentifikasi adanya kesenjangan strategis (gap analysis) yang signifikan dalam ekosistem perdagangan kopi digital saat ini. Mekanisme pasar konvensional belum mampu menyediakan solusi integratif yang dapat menjembatani kompleksitas pemilihan produk dengan kebutuhan akan kepraktisan logistik rumah tangga secara simultan. Oleh karena itu, terdapat urgensi mendesak untuk menghadirkan sebuah sistem cerdas yang melampaui fungsi kanal penjualan transaksional semata, melainkan mampu bertransformasi menjadi mitra gaya hidup yang 'mengerti' preferensi rasa unik setiap individu melalui kurasi personal, sekaligus menjamin kontinuitas ketersediaan stok melalui mekanisme otomatisasi logistik, guna menciptakan ekosistem bisnis yang berkelanjutan dan berorientasi pada loyalitas.
+Merespons dinamika permasalahan tersebut, proyek ini mengusulkan pengembangan "BeanVoyage" sebagai solusi E-Business strategis yang dirancang untuk merevolusi pengalaman konsumsi kopi modern. Berbeda dengan paradigma e-commerce konvensional yang hanya berfokus pada transaksi sporadis, BeanVoyage mengadopsi model bisnis berbasis langganan (subscription-based) yang menempatkan kontinuitas layanan sebagai nilai inti. Sistem ini didukung oleh integrasi teknologi Customer Relationship Management (CRM) yang komprehensif, yang berfungsi untuk memfasilitasi personalisasi kurasi produk secara cerdas sesuai profil preferensi konsumen serta mengotomatisasi siklus pengadaan stok. Dengan demikian, BeanVoyage hadir bukan sekadar sebagai platform jual-beli, melainkan sebagai kurator pengalaman (experience curator) yang menjembatani jarak antara petani lokal dengan penikmat urban, sekaligus menjamin kenyamanan konsumen melalui retensi pelanggan yang berkelanjutan.
+1.2 Rumusan Masalah
+Berdasarkan uraian latar belakang masalah diatas, maka perumusan masalah dalam penelitian ini adalah sebagai berikut:
+Bagaimana merancang arsitektur platform e-bisnis berbasis model berlangganan yang mampu mentransformasi transaksi komoditas kopi konvensional menjadi sebuah eksperimen budaya (cultural experience) yang imersif, guna meningkatkan nilai tambah produk di mata konsumen modern?
+Bagaimana mengimplementasikan strategi Analytical Customer Relationship Management (CRM) guna menerjemahkan preferensi rasa pelanggan yang bersifat abstrak menjadi rekomendasi produk yang presisi dan terpersonalisasi melalui pendekatan Personalized Palate Profiling?
+Bagaimana mengonstruksi antarmuka visual website yang melampaui fungsi etalase produk konvensional, dengan menarasikan "Jejak Kultur & Warisan" (Storytelling) sebagai instrumen edukatif untuk membangun konektivitas emosional (emotional connectivity) yang autentik antara konsumen dan kekayaan agrikultur nusantara?
+1.3 Tujuan Penulisan
+Sejalan dengan rumusan masalah yang telah dipaparkan, tujuan dari penulisan proyek akhir ini adalah:
+Mengembangkan rancangan arsitektur platform E-Business inovatif yang tidak hanya memfasilitasi transaksi komersial, namun secara efektif mentransformasi proses pembelian menjadi sebuah eksperimen budaya (cultural experience) yang imersif melalui integrasi model berlangganan, guna menciptakan diferensiasi nilai yang signifikan di pasar kopi digital.
+Menerapkan strategi Analytical Customer Relationship Management (CRM) melalui pengembangan algoritma rekomendasi cerdas yang mampu memetakan profil preferensi rasa konsumen (Personalized Palate Profiling) secara presisi, guna menghadirkan kurasi produk yang akurat dan relevan secara individual demi meningkatkan loyalitas pelanggan.
+Mengonstruksi antarmuka pengalaman pengguna (User Experience) yang integratif dengan elemen narasi budaya (Storytelling), yang berfungsi sebagai media edukasi interaktif untuk memperkuat konektivitas emosional (emotional connectivity) serta apresiasi mendalam antara konsumen dengan narasi agrikultur dan warisan kopi nusantara.
+1.4 Manfaat Project
+Penyusunan proyek akhir ini diharapkan dapat memberikan kontribusi yang signifikan dan aplikatif bagi berbagai pemangku kepentingan, yaitu:
+Bagi Penulis 
+Proyek ini berfungsi sebagai wahana aktualisasi kompetensi akademik untuk mengintegrasikan teori E-Bisnis strategis dengan praktik rekayasa perangkat lunak modern. Melalui perancangan platform BeanVoyage, penulis berkesempatan mengimplementasikan pemahaman mendalam mengenai arsitektur sistem berbasis subscription, manajemen basis data relasional untuk CRM, serta pengembangan antarmuka pengguna yang berorientasi pada pengalaman (User Experience Design), sebagai bekal krusial dalam menghadapi tantangan industri teknologi masa depan.
+Bagi Mitra Petani dan UMKM Kopi
+Platform ini dirancang untuk membuka akses pasar digital yang lebih inklusif dan berkelanjutan bagi para petani serta pelaku UMKM kopi lokal. Dengan adanya fitur storytelling yang kuat, produk kopi nusantara tidak hanya dipasarkan sebagai komoditas mentah, melainkan sebagai aset budaya yang bernilai tinggi. Hal ini berpotensi meningkatkan apresiasi pasar terhadap kualitas produk lokal, memperluas jangkauan distribusi melampaui batas geografis konvensional, serta menciptakan stabilitas permintaan melalui model bisnis berlangganan yang dapat diprediksi.
+Bagi Konsumen (Subscriber)
+BeanVoyage menawarkan solusi komprehensif atas kompleksitas pemilihan produk dan kendala logistik harian. Konsumen akan mendapatkan manfaat berupa kenyamanan maksimal melalui otomatisasi pengiriman stok kopi yang terjamin kualitasnya, serta pengalaman personalisasi rasa yang presisi. Lebih dari itu, platform ini memberikan nilai edukatif melalui narasi budaya yang menyertai setiap produk, memperkaya wawasan konsumen mengenai kekayaan kopi nusantara, serta mengubah rutinitas minum kopi harian menjadi sebuah perjalanan apresiasi budaya yang bermakna.
+
+
+BAB 2 PROFIL BISNIS & ANALISIS PRODUK
+2.1 Profil Usaha & Filosofi Brand
+BeanVoyage berdiri di atas fondasi filosofis yang melampaui peran pengecer kopi konvensional; kami memposisikan diri sebagai Experience Curators yang mendedikasikan diri untuk menjembatani jarak geografis dan emosional antara penikmat kopi urban dengan kekayaan agrikultur pelosok nusantara. Mengusung manifesto "Orchestrating the Archipelago's Symphony", esensi bisnis kami terletak pada konsep "The Voyage" atau sang penjelajahan, di mana kopi dipandang sebagai media paling jujur untuk menarasikan cerita tentang tanah, iklim, dan tangan-tangan petani yang merawatnya, merebut kembali sakralitas kopi dari sekadar komoditas fungsional menjadi sebuah pengalaman yang bermakna.
+Melalui narasi "An Archipelago in Every Cup", setiap kotak langganan kami dirancang sebagai tiket menuju sebuah Sensory Expedition yang mengundang pelanggan menavigasi kekayaan geografi Indonesia tanpa meninggalkan kenyamanan rumah. Kami menghadirkan eksplorasi terroir atau "The Taste of Place" yang kontras dan mendalam, mulai dari karakter tebal legendaris Gayo hingga kompleksitas rempah yang tersembunyi di lereng Marapi, Batusangkar, di jantung Tanah Minang. Lebih jauh lagi, kami mengangkat jejak kultur dan warisan dengan menyoroti tradisi unik seperti sejarah "Kawa Daun" yang lahir dari kearifan lokal, mengubah setiap biji kopi menjadi artefak budaya yang bernilai tinggi serta membangun konektivitas emosional yang kuat antara pelanggan dan asal-usul kopi mereka.
+Nilai strategis yang ditawarkan BeanVoyage berpusat pada integrasi antara Authentic Discovery terhadap permata tersembunyi yang jarang terekspos pasar massal dengan Elevated Convenience dalam format berlangganan yang modern. Untuk memastikan relevansi pengalaman ini, kami menerapkan pendekatan Hyper-Personalization berbasis data, di mana peta perjalanan rasa dikurasi secara presisi sesuai preferensi unik setiap pelanggan. Dengan demikian, BeanVoyage tidak hanya menawarkan akses eksklusif terhadap kopi langka, tetapi juga menciptakan pengalaman eksplorasi yang intim, edukatif, dan sangat personal, menjadikan setiap cangkir sebagai representasi perjalanan rasa yang disesuaikan dengan profil unik sang penikmat.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2.2 Business Model Canvas (BMC)
+
+
+Key Partners
+Petani & Koperasi Lokal
+Logistik Pihak Ketiga (3PL)
+Payment Gateway
+Vendor Kemasan
+Key Activities
+Kurasi & Quality Control (Cupping)
+Pengembangan Website & CRM
+Pemasaran Konten Digital
+Manajemen Logistik
+Value Propositions
+Kurasi Terpersonalisasi (Personalized Curation)
+Storytelling Budaya Otentik
+Akses Single Origin Langka
+Kemudahan Berlangganan (Automated)
+Customer Relationships
+Dashboard Langganan Mandiri
+Umpan Balik (Tasting Journal)
+Komunitas Eksklusif (Voyager Club)
+Layanan Pelanggan Chatbot
+Customer Segments
+
+Profesional Muda (Weekend Voyager)
+Penyeduh Rutin (Daily Ritualist)
+Kolektor Kopi (Connoisseur)
+Masyarakat Urban Digital
+Key Resources
+Platform E-CRM & Algoritma
+Jaringan Kurasi Kopi
+Tim Konten & Kreatif
+Basis Data Pelanggan
+Channels
+Website E-Commerce (Next.js)
+Media Sosial (Instagram/TikTok)
+Email Newsletter
+Unboxing Experience
+Cost Structures
+HPP Produk & Kemasan
+Biaya Akuisisi Pelanggan (Iklan)
+Biaya Operasional & Logistik
+Biaya Server & Maintenance IT
+Revenue Streams
+Biaya Langganan Bulanan
+Penjualan Lepas (Merchandise/Alat)
+Paket Hadiah Korporat (B2B)
+
+
+Untuk membedah logika penciptaan nilai (value creation) BeanVoyage, kami menggunakan kerangka kerja Business Model Canvas (BMC). Kerangka ini menyoroti bagaimana integrasi antara aspek operasional, pemasaran, dan keuangan mendukung strategi CRM yang kami usung.
+1. Customer Segments (Segmen Pelanggan)
+Kami menerapkan strategi segmentasi bertingkat. Fokus utama bukan hanya demografis, melainkan psikografis. Mulai dari Aspiring Professionals yang mencari kemudahan, Ritualist Home-Brewers yang mencari konsistensi pasokan, hingga Cultural Connoisseurs yang bersedia membayar premium untuk nilai eksklusivitas dan narasi budaya (seperti Kawa Daun dan kopi Batusangkar).
+2. Value Propositions (Proposisi Nilai)
+Inti dari BeanVoyage adalah memecahkan masalah choice paralysis (kebingungan memilih) di pasar kopi yang jenuh. Kami menawarkan "Hyper-Personalized Curation", di mana setiap pengiriman disesuaikan dengan profil lidah pelanggan menggunakan algoritma cerdas. Selain itu, kami menyuntikkan nilai emosional melalui "Authentic Cultural Storytelling", mengubah produk komoditas menjadi pengalaman eksplorasi budaya.
+3. Channels (Saluran Distribusi)
+Kami mengadopsi model Direct-to-Consumer (DTC) sepenuhnya melalui platform web terintegrasi. Ini memungkinkan kami mengontrol seluruh rantai pengalaman pelanggan, mulai dari digital onboarding hingga unboxing fisik di rumah. Media sosial difungsikan bukan sekadar etalase, melainkan kanal edukasi visual untuk membangun brand desire.
+4. Customer Relationships (Hubungan Pelanggan)
+Strategi CRM kami menggabungkan Automated Service untuk efisiensi transaksional dengan Deep Engagement untuk loyalitas. Fitur "Tasting Journal" menciptakan hubungan dua arah (Collaborative CRM), di mana pelanggan merasa didengar, dan data mereka digunakan untuk menyempurnakan layanan bulan berikutnya.
+5. Revenue Streams (Arus Pendapatan)
+Model bisnis Subscription memberikan keunggulan kompetitif berupa Recurring Revenue (pendapatan berulang) yang dapat diprediksi, berbeda dengan model ritel tradisional yang fluktuatif. Pendapatan tambahan dihasilkan dari penjualan cross-selling alat seduh dan merchandise eksklusif bagi anggota aktif.
+6. Key Resources (Sumber Daya Utama)
+Aset strategis kami bukanlah mesin sangrai semata, melainkan Data Preferensi Pelanggan dan Platform E-CRM. Data ini adalah kekayaan intelektual yang memungkinkan kami memprediksi tren selera pasar lebih akurat daripada kompetitor konvensional.
+7. Key Activities (Aktivitas Kunci)
+Aktivitas operasional berpusat pada dua kutub: Kurasi Produk (memastikan kualitas green beans dari mitra petani) dan Analisis Data (menerjemahkan data perilaku konsumen menjadi strategi retensi). Produksi konten naratif juga menjadi aktivitas harian vital untuk menjaga relevansi brand.
+8. Key Partners (Mitra Utama)
+Kami memosisikan petani di daerah origin (seperti Tanah Datar dan Gayo) bukan sebagai vendor, melainkan mitra strategis hulu. Di sisi hilir, integrasi API dengan penyedia logistik dan payment gateway memastikan pengalaman transaksi yang mulus tanpa hambatan teknis.
+9. Cost Structure (Struktur Biaya)
+Struktur biaya BeanVoyage didominasi oleh Variable Costs (COGS produk dan logistik) serta biaya pemasaran (Customer Acquisition Cost). Investasi teknologi dialokasikan pada pengembangan awal sistem CRM untuk menekan biaya operasional jangka panjang melalui otomatisasi.
+
+2.3 Deskripsi Produk dan Layanan
+Strategi penetapan harga BeanVoyage menggunakan pendekatan Psychological Price Tiering untuk memaksimalkan Customer Lifetime Value (CLV) di berbagai segmen pasar.
+Tier 1: The Weekend Voyager (Entry Level)
+Dirancang untuk segmen "Casual Drinker" yang ingin mulai mengeksplorasi kopi asli Indonesia namun memiliki hambatan psikologis terhadap harga atau kerumitan penyeduhan.
+Harga: Rp 109.000 / bulan (Flat Rate).
+Inklusi Produk:
+200g Seasonal Single Origin (Rotasi bulanan: fokus pada rasa yang mudah diterima seperti Aceh Gayo atau Bali Kintamani).
+Opsi Gilingan: Tersedia pilihan Whole Beans atau Drip Bags (praktis).
+Digital Origin Card: QR Code ke cerita singkat petani.
+Psychological Hook (The "Low-Risk Trial"):
+Affordability: Harga setara 2-3 cangkir di kafe, menurunkan barrier to entry.
+No-Intimidation: Narasi eksplorasi santai tanpa menuntut keahlian teknis.
+Tier 2: The Daily Ritual (Mid Level - Core Product)
+Dirancang untuk segmen "Habitual Drinker" yang membutuhkan konsistensi pasokan kopi berkualitas tinggi untuk konsumsi harian.
+Harga: Rp 289.000 / bulan (Best Value).
+Inklusi Produk:
+2 x 200g Curated Beans (Dua varietas berbeda untuk perbandingan rasa: misal 1 Washed + 1 Experimental).
+BeanVoyage Tasting Journal: Buku saku fisik untuk mencatat tasting notes.
+Akses "Voyager Club": Diskon 10% untuk pembelian alat seduh.
+Psychological Hook (The "Smart Choice"):
+Variety & Education: Memenuhi kebutuhan stok bulanan sekaligus kebutuhan intelektual (membandingkan rasa).
+Habit Formation: Menjadi bagian tak terpisahkan dari rutinitas pagi.
+Tier 3: The Curator's Circle (Premium / Exclusive)
+Dirancang untuk segmen "Coffee Snobs & Collectors" yang mencari eksklusivitas, kelangkaan, dan cerita mendalam.
+Harga: Rp 499.000 / bulan (Premium Pricing).
+Inklusi Produk:
+3 x 100g Rare Microlots: Biji kopi kompetisi atau varietas langka (contoh: Yellow Caturra dari Batusangkar).
+Heritage Bonus: Item kultural rotasi (contoh: Sampel otentik "Kawa Daun" kering).
+Exclusive Merchandise: 1 Item koleksi per kuartal.
+Virtual Cupping Session: Undangan sesi tasting daring eksklusif.
+Psychological Hook (The "Status & Scarcity"):
+FOMO (Fear Of Missing Out): Akses ke produk yang tidak dijual umum.
+Intimacy: Kedekatan akses dengan pembuat kopi dan validasi status sebagai connoisseur.
+2.4 Segmentasi dan Target Pasar
+BeanVoyage berfokus pada segmen niche dengan memetakan tiga "Buyer Persona" utama untuk strategi CRM yang presisi:
+Persona A: "The Aspiring Professional" (Target Tier 1)
+Profil: Usia 23–29, First-jobber/Karyawan Start-up, Domisili Kota Besar (SES B).
+Perilaku: Digital Native (Instagram/TikTok), suka konten estetik. Kopi adalah gaya hidup, namun belum ahli menyeduh.
+Pain Point: Ingin kopi enak di rumah tapi takut ribet/salah beli.
+Trigger: Kemasan visual menarik dan kemudahan (Drip Bag).
+Persona B: "The Ritualist Home-Brewer" (Target Tier 2)
+Profil: Usia 28–40, Manajer/Profesional/Freelancer, Domisili Urban/Sub-urban (SES A).
+Perilaku: Memiliki alat seduh manual. Menyeduh kopi adalah momen "mindfulness". Paham istilah teknis kopi.
+Pain Point: Bosan dengan kopi pasaran, malas riset roastery baru tiap bulan.
+Persona C: "The Cultural Connoisseur" (Target Tier 3)
+Profil: Usia 35–55, Eksekutif/Business Owner/Ekspatriat (SES A+).
+Perilaku: Mencari cerita budaya dan dampak sosial (social impact). Menghargai kelangkaan dan sejarah (seperti narasi Kawa Daun).
+Pain Point: Sulit menemukan produk unik/rare di pasar umum.
+Trigger: Eksklusivitas, narasi budaya yang kuat, dan status sosial.
+2.5 Analisis SWOT (Strengths, Weaknesses, Opportunities, Threats)
+Analisis berikut memetakan posisi strategis BeanVoyage dalam lanskap industri kopi spesialti Indonesia menggunakan pendekatan matriks untuk mengevaluasi kapabilitas internal dan dinamika eksternal perusahaan.
+Tabel 2.1 Analisis SWOT BeanVoyage
+Komponen Analisis
+Faktor Strategis & Implikasi Bisnis
+STRENGTHS
+
+(Kekuatan Internal)
+1. Model Bisnis Subscription (Recurring Revenue):
+
+Skema berlangganan memberikan kepastian arus kas (cash flow) yang stabil dan prediktabilitas inventaris, meminimalisir risiko fluktuasi pendapatan harian.
+
+
+2. Diferensiasi Storytelling & Experience Curator:
+
+USP yang kuat melalui narasi budaya mendalam (seperti Batusangkar & Kawa Daun) menciptakan Emotional Lock-in, membedakan brand dari penjual komoditas biasa.
+
+
+3. Integrasi CRM & Hyper-personalization:
+
+Penerapan teknologi untuk kurasi rasa berbasis data personal menciptakan hambatan berpindah (switching cost) yang tinggi bagi pelanggan karena sulitnya mencari substitusi yang sama personalnya.
+WEAKNESSES
+
+(Kelemahan Internal)
+1. Brand Awareness Nol (Fase Inisiasi):
+
+Sebagai entitas baru, BeanVoyage belum memiliki ekuitas merek, menuntut alokasi modal kerja yang besar untuk Customer Acquisition Cost (CAC) di awal operasi.
+
+
+2. Manajemen Produk Perishable:
+
+Jendela kesegaran kopi yang pendek menuntut presisi tinggi dalam manajemen stok; kesalahan estimasi berisiko menyebabkan kerugian aset (inventory write-off).
+
+
+3. Ketergantungan Logistik Pihak Ketiga:
+
+Kualitas pengalaman akhir konsumen (Last Mile Delivery) sangat bergantung pada kinerja kurir eksternal yang berada di luar kendali operasional langsung manajemen.
+OPPORTUNITIES
+
+(Peluang Eksternal)
+1. Pertumbuhan Pasar "Third Wave Coffee":
+
+Peningkatan literasi pasar terhadap kopi lokal dan pergeseran preferensi konsumen dari kopi instan ke fresh roast memperbesar Total Addressable Market.
+
+
+2. Tren Work From Home (WFH):
+
+Perubahan gaya hidup pasca-pandemi meningkatkan frekuensi penyeduhan kopi mandiri (home brewing), menciptakan ceruk pasar baru yang stabil untuk konsumsi domestik.
+
+
+3. Eksklusivitas Kemitraan Hulu:
+
+Potensi kerjasama langsung dengan petani mikro di daerah terpencil (mis: Pegunungan Bintang) memungkinkan akses pasokan eksklusif yang tidak dimiliki kompetitor.
+THREATS
+
+(Ancaman Eksternal)
+1. Kompetisi Economies of Scale:
+
+Ancaman perang harga dari jaringan kedai kopi raksasa (Chain Coffee Shop) yang mulai merambah pasar home beans dengan efisiensi biaya produksi massal.
+
+
+2. Volatilitas Harga Komoditas:
+
+Fluktuasi harga biji kopi mentah (Green Beans) akibat faktor iklim atau gagal panen dapat menekan margin keuntungan secara signifikan.
+
+
+3. Sensitivitas Harga Produk Tersier:
+
+Sebagai produk gaya hidup, permintaan sangat elastis terhadap daya beli; konsumen rentan melakukan downgrading ke alternatif lebih murah saat kondisi ekonomi melemah.
+
+Tabel ini menyimpulkan bahwa meskipun BeanVoyage memiliki keunggulan kompetitif dalam model bisnis dan narasi, strategi mitigasi risiko logistik dan akuisisi pelanggan harus menjadi prioritas utama dalam perancangan sistem.
+
+BAB III PERANCANGAN SISTEM CRM
+Bab ini membahas rancangan teknis sistem BeanVoyage, dimulai dari strategi manajemen hubungan pelanggan (CRM), alur proses bisnis, hingga struktur basis data yang diperlukan untuk mendukung fitur personalisasi dan otomatisasi langganan
+
+
+3.1 Strategi Implementasi CRM
+Perancangan sistem BeanVoyage didasarkan pada arsitektur E-CRM yang komprehensif, di mana teknologi informasi digunakan untuk mengelola siklus hidup pelanggan (Customer Lifecycle) secara end-to-end. Strategi implementasi ini dibagi ke dalam tiga modul fungsional utama: Operational, Analytical, dan Collaborative.
+Berikut adalah penjabaran teknis penerapan ketiga pilar tersebut dalam ekosistem sistem BeanVoyage:
+3.1.1 Otomatisasi Proses Bisnis (Automation & Efficiency)
+Komponen ini berfokus pada efisiensi operasional melalui otomatisasi proses customer-facing (antarmuka pelanggan) dan back-end (sisi admin). Tujuannya adalah meminimalkan intervensi manual dalam transaksi rutin.
+Subscription Engine Module (Mesin Langganan Otomatis):
+Sistem mengimplementasikan logika recurring billing (penagihan berulang). Berbeda dengan model e-commerce transaksional biasa, modul ini menyimpan status langganan aktif (active subscription record) dalam basis data. Sistem akan secara otomatis men-generate pesanan baru (new order generation) pada tanggal siklus tagihan setiap bulannya tanpa mengharuskan pengguna melakukan proses checkout manual berulang kali.
+Logistics API Integration & Auto-Notification:
+Sistem terintegrasi melalui API (Application Programming Interface) dengan server penyedia logistik pihak ketiga. Saat nomor resi (tracking number) diinput atau dideteksi, sistem secara otomatis memicu pengiriman notifikasi status pengiriman (delivery status updates) melalui WhatsApp Gateway atau Email kepada pengguna, mengurangi beban layanan pelanggan (customer service) dalam menjawab pertanyaan status paket.
+3.1.2 Inteligensi Data & Personalisasi (Data Intelligence)
+Ini adalah otak dari sistem BeanVoyage. Modul ini bertanggung jawab atas akuisisi data, pengolahan, dan penerapan logika bisnis untuk personalisasi produk.
+Palate Profiling Quiz (Data Acquisition Layer):
+Pada tahap onboarding, sistem mewajibkan pengguna mengisi kuis interaktif untuk memetakan preferensi sensorik mereka. Variabel data yang ditangkap meliputi tingkat preferensi terhadap Acidity (Keasaman), Body (Kekentalan), Roast Level, hingga metode seduh (Brewing Method). Data ini disimpan sebagai atribut profil pengguna (User Profile Attributes) yang statis namun dapat diperbarui.
+Recommendation Logic Algorithm:
+Sistem menggunakan algoritma pencocokan (rule-based matching algorithm) yang membandingkan parameter profil pengguna dengan metadata produk kopi yang tersedia di inventaris bulan berjalan.
+Contoh Logika: JIKA User_Preference = Low Acidity DAN Product_Attribute = Gayo (Low Acidity), MAKA skor kecocokan tinggi. Sistem akan memprioritaskan alokasi produk tersebut untuk pengguna bersangkutan.
+3.1.3 Interaksi & Umpan Balik (Feedback Loop)
+Komponen ini memfasilitasi komunikasi dua arah yang mengubah interaksi transaksional menjadi hubungan kolaboratif, memungkinkan sistem untuk "belajar" dan beradaptasi.
+Voyager Dashboard & Tasting Notes Module:
+Sistem menyediakan antarmuka khusus (User Dashboard) di mana pelanggan dapat mengakses fitur "Tasting Journal". Di sini, pengguna dapat memberikan rating kuantitatif (bintang 1-5) dan catatan kualitatif (text review) terhadap produk yang mereka terima.
+Closed-Loop Feedback System:
+Data rating yang diinput pengguna tidak hanya menjadi arsip, melainkan bertindak sebagai feedback signal bagi Analytical CRM. Jika pengguna memberikan rating rendah pada profil rasa tertentu, sistem akan memperbarui record preferensi pengguna tersebut (misalnya: menandai "hindari rasa fruity") untuk menyempurnakan akurasi kurasi pada siklus pengiriman bulan berikutnya. Mekanisme ini menciptakan siklus perbaikan mutu layanan yang berkelanjutan (continuous improvement).
+
+3.1 Strategi Implementasi CRM
+3.2 Perancangan Alur Sistem
+Perancangan alur sistem BeanVoyage mengadopsi pendekatan arsitektur yang melampaui mekanisme E-Commerce transaksional konvensional. Sistem ini mengintegrasikan lapisan antarmuka pengguna (User Zone) dengan logika pemrosesan server (CRM Engine) secara seamless (mulus), menciptakan ekosistem digital yang responsif terhadap data. Berbeda dengan model pembelian linear "beli-putus", alur sistem ini dirancang dengan logika siklikal (Closed-Loop System) untuk memfasilitasi hubungan jangka panjang dan adaptif dengan pelanggan.
+Secara operasional, dinamika sistem terbagi ke dalam tiga fase utama: (1) Akuisisi Data, di mana preferensi pengguna ditangkap melalui Palate Quiz; (2) Pemrosesan Cerdas, di mana Analytical Engine menggunakan algoritma pencocokan untuk menentukan rekomendasi produk yang personal berdasarkan basis data; dan (3) Retensi & Optimasi, yang diwujudkan melalui mekanisme Feedback Loop. Fitur ini memungkinkan data ulasan pengguna (Tasting Notes) dari Dashboard dikembalikan ke sistem untuk memperbarui parameter rekomendasi pada siklus berikutnya, memastikan akurasi layanan yang terus meningkat seiring waktu.
+Visualisasi arsitektur sistem secara menyeluruh dapat dilihat pada Gambar 3.1 berikut:
+
+
+
+
+
+
+3.3 Perancangan Basis Data
+Arsitektur penyimpanan data pada sistem BeanVoyage dirancang menggunakan paradigma Relational Database Management System (RDBMS) untuk menjamin integritas referensial dan efisiensi pengambilan data. Struktur skema dinormalisasi dan disegmentasi ke dalam empat kluster logis utama guna mendukung operasional CRM secara menyeluruh. Kluster tersebut meliputi: (1) Kluster Pengguna yang menangani data administratif identitas; (2) Kluster Langganan yang mengelola status keanggotaan dan siklus tagihan otomatis; (3) Kluster Inventaris Cerdas yang memisahkan pencatatan stok fisik dengan atribut metadata organoleptik; serta (4) Kluster Umpan Balik yang berfungsi merekam data evaluasi historis pelanggan.
+Aspek strategis dalam perancangan ini terletak pada pemisahan entitas Profil_Rasa_User (Data Pelanggan) dan Metadata_Rasa_Kopi (Data Produk). Segregasi struktural ini dirancang secara spesifik untuk memfasilitasi operasi pencocokan algoritmik (algorithmic matching), di mana sistem dapat melakukan komparasi matematis antara preferensi subjektif pelanggan dengan karakteristik objektif produk secara presisi. Desain ini memungkinkan sistem memberikan rekomendasi yang sangat personal tanpa mengorbankan performa basis data.
+Skema relasi antar entitas secara lengkap dapat dilihat pada Gambar 3.2 berikut:
+
+Gambar 3.2 Rancangan Entity Relationship Diagram (ERD) Sistem Bean Voyage
+
+Anda hanya perlu melakukan edit minor (sedikit saja) jika Dosen Penguji atau Pembimbing Anda sangat teliti pada Bab 3.2 (Flowchart).
+Jika Anda ingin dokumen menjadi perfect match dengan aplikasi nanti, saran saya cukup tambahkan satu paragraf penjelasan di Bab 4 (Implementasi) nanti, bukan mengubah Bab 3.
+Contoh kalimat untuk Bab 4 nanti:
+"Dalam tahap implementasi antarmuka, sistem membagi tampilan Dashboard menjadi empat state (kondisi) berdasarkan status pengguna di database, yaitu: Pengguna Baru, Prospek (sudah kuis belum bayar), Pelanggan Aktif, dan Pelanggan Non-Aktif, guna mencegah kesalahan alur transaksi."
+Kesimpulan:
+Fokus saja pada perbaikan kodingan dengan Antigravity menggunakan klasifikasi tadi. Dokumen PDF Anda sudah valid sebagai landasan, karena ERD-nya sudah mendukung fitur-fitur tersebut.
+
