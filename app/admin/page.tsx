@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import LogoutButton from '@/components/LogoutButton';
 import { Package, Truck, CheckCircle, AlertCircle, RefreshCw, Search } from 'lucide-react';
@@ -132,18 +133,26 @@ export default function AdminPage() {
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-gray-200 font-sans p-8">
 
-            <header className="max-w-7xl mx-auto mb-12 border-b border-[#D4AF37]/30 pb-6 flex justify-between items-end">
+            <header className="max-w-7xl mx-auto mb-12 border-b border-[#D4AF37]/30 pb-6 flex justify-between items-center">
                 <div>
-                    <h1 className="font-serif text-4xl text-[#D4AF37] mb-2">BeanVoyage Admin</h1>
-                    <p className="text-gray-500 text-sm tracking-widest uppercase">Logistik & Pengiriman</p>
+                    <h1 className="font-serif text-3xl text-[#D4AF37]">BeanVoyage Admin</h1>
+                    <p className="text-gray-500 text-xs tracking-widest uppercase mt-1">LOGISTIK & PENGIRIMAN</p>
                 </div>
-                <div className="flex items-center gap-4">
+
+                <div className="flex items-center gap-6">
+                    {/* Tombol Back Baru */}
+                    <Link href="/dashboard" className="text-gray-400 hover:text-[#D4AF37] text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
+                        ← KEUANGAN & OPERASIONAL
+                    </Link>
+
+                    {/* Tombol Refresh Lama */}
                     <button
                         onClick={fetchOrders}
                         className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#D4AF37] hover:text-white transition-colors"
                     >
-                        <RefreshCw size={14} /> Refresh Data
+                        <RefreshCw size={14} /> REFRESH DATA
                     </button>
+
                     <div className="h-4 w-[1px] bg-gray-700 mx-2"></div>
                     <LogoutButton />
                 </div>

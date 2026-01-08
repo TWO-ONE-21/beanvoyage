@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabaseClient';
 import LogoutButton from '@/components/LogoutButton';
-import { Check, Settings, X, AlertTriangle, PauseCircle } from 'lucide-react';
+import { Check, Settings, X, AlertTriangle, PauseCircle, DollarSign, TrendingUp, Users, Package, Star, Activity, ArrowRight } from 'lucide-react';
 
 // --- TYPES ---
 interface UserData {
@@ -78,7 +78,7 @@ export default function DashboardPage() {
     const [activeShipment, setActiveShipment] = useState<Shipment | null>(null);
 
     // Admin Stats State
-    const [adminStats, setAdminStats] = useState({ activeMembers: 0, pendingShipments: 0, completedDeliveries: 0 });
+    const [adminStats, setAdminStats] = useState({ activeMembers: 0, pendingShipments: 0, completedDeliveries: 0, mrr: 0 });
 
     // Review & Calibration State
     const [deliveryToReview, setDeliveryToReview] = useState<DeliveryForReview | null>(null);
@@ -117,10 +117,14 @@ export default function DashboardPage() {
                     setIsAdmin(true);
 
                     // FETCH ADMIN STATS
+                    // 1. Active Members
                     const { count: activeCount } = await supabase
                         .from('status_langganan')
                         .select('*', { count: 'exact', head: true })
                         .eq('status_aktif', 'Active');
+
+                    // Simplified MRR Demo Logic (As per request: Active * 189.000)
+                    const totalRevenue = (activeCount || 0) * 189000;
 
                     const { count: pendingCount } = await supabase
                         .from('log_pengiriman')
@@ -135,7 +139,8 @@ export default function DashboardPage() {
                     setAdminStats({
                         activeMembers: activeCount || 0,
                         pendingShipments: pendingCount || 0,
-                        completedDeliveries: deliveredCount || 0
+                        completedDeliveries: deliveredCount || 0,
+                        mrr: totalRevenue
                     });
 
                     setLoading(false);
@@ -383,49 +388,140 @@ export default function DashboardPage() {
     // --- ADMIN GATE RENDER ---
     if (isAdmin) {
         return (
-            <div className="min-h-screen bg-[#0a0a0a] text-[#D4AF37] p-8 font-serif">
-                {/* Header Logout Component */}
-                <div className="flex justify-between items-center mb-12">
-                    <h1 className="text-3xl">Administrator HQ</h1>
+            <div className="min-h-screen bg-[#050505] text-[#D4AF37] p-8 md:p-12 font-serif">
+                {/* HEADLINE */}
+                <div className="max-w-7xl mx-auto flex justify-between items-center mb-16 px-4">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tight">EXECUTIVE <span className="text-[#D4AF37]">DASHBOARD</span></h1>
+                        <p className="text-gray-500 text-xs tracking-[0.3em] uppercase mt-2 pl-1">RINGKASAN KEUANGAN & OPERASIONAL</p>
+                    </div>
                     <LogoutButton />
                 </div>
 
-                {/* Admin Card */}
-                <div className="max-w-5xl mx-auto mt-10">
+                <div className="max-w-7xl mx-auto space-y-8 px-4">
 
-                    {/* KPI GRID */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                        {/* Card 1: Active Members */}
-                        <div className="bg-[#111] border border-[#D4AF37] p-6 rounded-sm text-center">
-                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Active Subscribers</h3>
-                            <p className="font-serif text-5xl text-[#D4AF37]">{adminStats.activeMembers}</p>
-                            <p className="text-gray-600 text-[10px] mt-2">TOTAL MEMBERSHIP</p>
+                    {/* ROW 1: 4 KEY METRICS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                        {/* 1. REVENUE (MRR) - GRID UTAMA */}
+                        <div className="bg-[#111] p-8 border-l-4 border-[#D4AF37] relative group hover:bg-[#161616] transition-colors">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="p-3 bg-[#D4AF37]/10 rounded-full text-[#D4AF37]">
+                                    <DollarSign size={24} />
+                                </div>
+                                <span className="text-xs font-bold text-green-500 flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded">
+                                    <TrendingUp size={10} /> +12%
+                                </span>
+                            </div>
+                            <p className="text-gray-500 text-xs uppercase tracking-widest font-bold mb-1">TOTAL ESTIMASI PENDAPATAN</p>
+                            <h3 className="text-3xl font-serif text-white group-hover:text-[#D4AF37] transition-colors">
+                                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(adminStats.mrr)}
+                            </h3>
+                            <p className="text-xs text-gray-600 mt-2 italic">Pendapatan Bulanan Berulang (MRR)</p>
                         </div>
 
-                        {/* Card 2: Pending Shipments */}
-                        <div className="bg-[#111] border border-red-900/50 p-6 rounded-sm text-center">
-                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">To Be Packed</h3>
-                            <p className="font-serif text-5xl text-red-500">{adminStats.pendingShipments}</p>
-                            <p className="text-gray-600 text-[10px] mt-2">PROCESSING QUEUE</p>
+                        {/* 2. ACTIVE SUBSCRIBERS */}
+                        <div className="bg-[#111] p-8 border-l-4 border-gray-800 hover:border-gray-600 transition-colors group">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="p-3 bg-gray-800 rounded-full text-gray-400 group-hover:text-white transition-colors">
+                                    <Users size={24} />
+                                </div>
+                            </div>
+                            <p className="text-gray-500 text-xs uppercase tracking-widest font-bold mb-1">PELANGGAN AKTIF</p>
+                            <h3 className="text-3xl font-serif text-white">{adminStats.activeMembers}</h3>
+                            <p className="text-xs text-gray-600 mt-2">Member Terverifikasi</p>
                         </div>
 
-                        {/* Card 3: Completed Journey */}
-                        <div className="bg-[#111] border border-green-900/50 p-6 rounded-sm text-center">
-                            <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Completed Journey</h3>
-                            <p className="font-serif text-5xl text-green-500">{adminStats.completedDeliveries}</p>
-                            <p className="text-gray-600 text-[10px] mt-2">DELIVERED PACKAGES</p>
+                        {/* 3. PENDING SHIPMENTS */}
+                        <div className="bg-[#111] p-8 border-l-4 border-red-900/50 hover:border-red-600 transition-colors group">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="p-3 bg-red-900/20 rounded-full text-red-500">
+                                    <Package size={24} />
+                                </div>
+                                {adminStats.pendingShipments > 0 && (
+                                    <span className="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded animate-pulse">
+                                        BUTUH PROSES
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-gray-500 text-xs uppercase tracking-widest font-bold mb-1">ANTREAN PENGIRIMAN</p>
+                            <h3 className="text-3xl font-serif text-white">{adminStats.pendingShipments}</h3>
+                            <p className="text-xs text-gray-600 mt-2">Menunggu di Gudang Logistik</p>
+                        </div>
+
+                        {/* 4. AVG SATISFACTION (STATIC DEMO) */}
+                        <div className="bg-[#111] p-8 border-l-4 border-blue-900/50 hover:border-blue-500 transition-colors group">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="p-3 bg-blue-900/20 rounded-full text-blue-400">
+                                    <Star size={24} />
+                                </div>
+                            </div>
+                            <p className="text-gray-500 text-xs uppercase tracking-widest font-bold mb-1">RATA-RATA KEPUASAN</p>
+                            <h3 className="text-3xl font-serif text-white">4.8<span className="text-lg text-gray-600">/5.0</span></h3>
+                            <p className="text-xs text-gray-600 mt-2">Berdasarkan Ulasan Terkini</p>
                         </div>
                     </div>
 
-                    <div className="border border-[#D4AF37] p-10 text-center rounded-sm bg-[#111]">
-                        <h2 className="text-4xl mb-6">Logistics Command Center</h2>
-                        <p className="font-sans text-gray-400 mb-8">
-                            Sistem CRM berjalan normal. Kelola pesanan, input resi, dan status pengiriman member dari sini.
-                        </p>
-                        <Link href="/admin" className="bg-[#D4AF37] text-black font-bold py-4 px-10 rounded hover:bg-[#b5952f] transition">
-                            BUKA PANEL ADMIN
-                        </Link>
+                    {/* ROW 2: ANALYTICS CHART (CSS) */}
+                    <div className="bg-[#111] p-8 border border-gray-800 rounded-sm">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-white font-serif text-xl border-b border-[#D4AF37] pb-2 inline-block">TREN PERTUMBUHAN MINGGUAN</h3>
+                            </div>
+                            <div className="flex gap-4 text-xs">
+                                <span className="flex items-center gap-2 text-gray-400"><div className="w-3 h-3 bg-[#D4AF37]"></div> Revenue</span>
+                                <span className="flex items-center gap-2 text-gray-400"><div className="w-3 h-3 bg-gray-800"></div> Churn</span>
+                            </div>
+                        </div>
+
+                        {/* CHART CONTAINER */}
+                        <div className="relative h-48 w-full border-b border-gray-800 flex items-end justify-between gap-2 px-4 pb-0">
+                            {/* Background Lines */}
+                            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+                                <div className="border-t border-gray-600 w-full h-0"></div>
+                                <div className="border-t border-gray-600 w-full h-0"></div>
+                                <div className="border-t border-gray-600 w-full h-0"></div>
+                                <div className="border-t border-gray-600 w-full h-0"></div>
+                            </div>
+
+                            {/* BARS */}
+                            {[40, 65, 35, 80, 55, 90, 75].map((h, i) => (
+                                <div key={i} className="group relative flex-1 h-full flex items-end">
+                                    <div
+                                        className="w-full bg-gradient-to-t from-[#D4AF37]/10 to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#fff] transition-all duration-500 rounded-t-sm relative"
+                                        style={{ height: `${h}%` }}
+                                    >
+                                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity bg-black px-2 py-1 rounded border border-gray-700">
+                                            {h}%
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between px-4 mt-4 text-xs text-gray-500 font-mono uppercase">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
                     </div>
+
+                    {/* ROW 3: OPERATIONS BUTTON */}
+                    <Link
+                        href="/admin"
+                        className="group flex items-center justify-between bg-[#111] border border-gray-800 hover:border-[#D4AF37] p-8 rounded-sm transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-6">
+                            <div className="p-4 bg-gray-900 group-hover:bg-[#D4AF37] transition-colors rounded-full text-white group-hover:text-black">
+                                <Activity size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl text-white font-serif group-hover:text-[#D4AF37] transition-colors">PUSAT KENDALI LOGISTIK</h3>
+                                <p className="text-gray-500 text-sm mt-1">Kelola pesanan, update status pengiriman, dan pantau logistik Nusantara.</p>
+                            </div>
+                        </div>
+                        <div className="text-white group-hover:translate-x-2 transition-transform">
+                            <ArrowRight size={32} />
+                        </div>
+                    </Link>
+
                 </div>
             </div>
         );
