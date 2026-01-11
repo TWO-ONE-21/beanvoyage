@@ -87,11 +87,21 @@ export default function LoginPage() {
                 }
             }
 
-            // 3. Redirect
-            // 3. Redirect based on Email Role
-            if (email === 'ardoriandaadmin@beanvoyage.com') {
+            // 3. Redirect based on Email Role (UPDATED for Multi-Admin)
+            // Daftar email admin yang diizinkan masuk ke panel admin
+            const ADMIN_EMAILS = [
+                'ardoriandaadmin@beanvoyage.com',
+                'admin@bean.com'
+            ];
+
+            // Normalisasi input email agar tidak sensitif huruf besar/kecil
+            const userEmail = email.toLowerCase().trim();
+
+            if (ADMIN_EMAILS.includes(userEmail)) {
+                console.log("Admin login detected. Redirecting to HQ...");
                 router.push('/admin');
             } else {
+                console.log("User login detected. Redirecting to Dashboard...");
                 router.push('/dashboard');
             }
 

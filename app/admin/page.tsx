@@ -30,19 +30,27 @@ export default function AdminPage() {
     const [updating, setUpdating] = useState<string | null>(null);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    // --- 1. SECURITY CHECK & DATA FETCHING ---
+    // --- DAFTAR ADMIN ---
+    // Harus sinkron dengan Dashboard dan Login
+    const ADMIN_EMAILS = [
+        'ardoriandaadmin@beanvoyage.com',
+        'admin@bean.com'
+    ];
+
     useEffect(() => {
         const initAdmin = async () => {
             try {
-                // A. Cek User Session
                 const { data: { user } } = await supabase.auth.getUser();
 
-                if (!user || user.email !== 'ardoriandaadmin@beanvoyage.com') {
-                    router.push('/dashboard'); // Not authorized
+                // Logic Security yang Diperbarui (Multi-Admin)
+                const currentUserEmail = user?.email?.toLowerCase().trim();
+
+                if (!user || !currentUserEmail || !ADMIN_EMAILS.includes(currentUserEmail)) {
+                    console.log("Unauthorized Access. Redirecting...");
+                    router.push('/dashboard');
                     return;
                 }
 
-                // B. Fetch Data dengan Syntax JOIN yang Explicit
                 await fetchOrders();
 
             } catch (err: any) {
@@ -56,7 +64,6 @@ export default function AdminPage() {
         initAdmin();
     }, [router]);
 
-    // --- FETCH ORDERS FUNCTION ---
     const fetchOrders = async () => {
         setErrorMsg(null);
 
@@ -78,11 +85,9 @@ export default function AdminPage() {
             return;
         }
 
-        // Handle empty state gracefully
         setOrders((data as any[]) || []);
     };
 
-    // --- 2. HANDLE UPDATE STATUS ---
     const updateStatus = async (id: string, newStatus: string, resi: string | null = null) => {
         setUpdating(id);
 
@@ -97,14 +102,12 @@ export default function AdminPage() {
 
             if (error) throw error;
 
-            // Refresh data local
             setOrders(prev => prev.map(order =>
                 order.delivery_id === id
                     ? { ...order, ...updatePayload }
                     : order
             ));
 
-            // Clear input resi jika sukses
             if (resi) {
                 setInputResi(prev => {
                     const next = { ...prev };
@@ -120,7 +123,6 @@ export default function AdminPage() {
         }
     };
 
-    // --- LOADING SCREEN ---
     if (loading) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center text-[#D4AF37]">
@@ -129,7 +131,6 @@ export default function AdminPage() {
         );
     }
 
-    // --- MAIN RENDER ---
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-gray-200 font-sans p-8">
 
@@ -140,12 +141,12 @@ export default function AdminPage() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    {/* Tombol Back Baru */}
+                    {/* Tombol Back */}
                     <Link href="/dashboard" className="text-gray-400 hover:text-[#D4AF37] text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors">
                         ← KEUANGAN & OPERASIONAL
                     </Link>
 
-                    {/* Tombol Refresh Lama */}
+                    {/* Tombol Refresh */}
                     <button
                         onClick={fetchOrders}
                         className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#D4AF37] hover:text-white transition-colors"
@@ -171,7 +172,6 @@ export default function AdminPage() {
                 <div className="bg-[#111] border border-gray-800 rounded-sm overflow-hidden">
 
                     {orders.length === 0 ? (
-                        // EMPTY STATE
                         <div className="p-20 text-center flex flex-col items-center text-gray-500">
                             <Package size={48} className="mb-4 opacity-20" />
                             <p className="font-serif text-xl mb-2">Belum ada pesanan masuk</p>
