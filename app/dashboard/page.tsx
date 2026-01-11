@@ -308,14 +308,38 @@ export default function DashboardPage() {
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-white font-serif text-xl border-b border-[#D4AF37] pb-2 inline-block">TREN PERTUMBUHAN MINGGUAN</h3>
                         </div>
-                        <div className="relative h-48 w-full border-b border-gray-800 flex items-end justify-between gap-2 px-4 pb-0">
-                            {[40, 65, 35, 80, 55, 90, 75].map((h, i) => (
-                                <div key={i} className="flex-1 h-full flex items-end">
-                                    <div className="w-full bg-gradient-to-t from-[#D4AF37]/10 to-[#D4AF37] rounded-t-sm" style={{ height: `${h}%` }}></div>
+                        {/* CHART CONTAINER */}
+                        <div className="relative h-64 w-full border-b border-gray-800 flex items-end justify-between gap-3 px-4 pb-0 mt-8">
+                            {/* Background Lines (Grid) */}
+                            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10 z-0">
+                                <div className="border-t border-gray-500 w-full h-0"></div>
+                                <div className="border-t border-gray-500 w-full h-0"></div>
+                                <div className="border-t border-gray-500 w-full h-0"></div>
+                                <div className="border-t border-gray-500 w-full h-0"></div>
+                            </div>
+
+                            {/* BARS with HOVER EFFECT */}
+                            {[45, 62, 38, 78, 55, 92, 70].map((h, i) => (
+                                <div key={i} className="group relative flex-1 h-full flex items-end z-10 cursor-pointer">
+                                    {/* The Bar */}
+                                    <div
+                                        className="w-full bg-gradient-to-t from-[#D4AF37]/10 to-[#D4AF37]/60 rounded-t-sm transition-all duration-300 ease-out 
+                group-hover:from-[#D4AF37] group-hover:to-[#FFF8DC] group-hover:h-[105%] group-hover:shadow-[0_0_30px_rgba(212,175,55,0.6)]"
+                                        style={{ height: `${h}%` }}
+                                    >
+                                        {/* The Tooltip (Floating Number) */}
+                                        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-[#000] border border-[#D4AF37] text-[#D4AF37] text-[10px] font-bold px-3 py-1 rounded opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg pointer-events-none whitespace-nowrap">
+                                            {h}% Growth
+                                            {/* Triangle pointer */}
+                                            <div className="absolute bottom-[-4px] left-1/2 transform -translate-x-1/2 w-2 h-2 bg-[#000] border-r border-b border-[#D4AF37] rotate-45"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                        <div className="flex justify-between px-4 mt-4 text-xs text-gray-500 font-mono uppercase"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+                        <div className="flex justify-between px-4 mt-4 text-[10px] text-gray-500 font-mono uppercase tracking-widest">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
                     </div>
 
                     {/* Logistics Link */}
